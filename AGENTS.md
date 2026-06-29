@@ -110,6 +110,64 @@ Exactly 6 questions: 1 pre + 3 check + 2 post. `correct` is zero-indexed. The si
 - 5+ unit tests minimum.
 - Runs via the language's stdlib runner (`python3 -m unittest discover`, `npx tsx --test`, Rust/Julia inline).
 
+### outputs/ — Prompts and skills
+
+Each lesson ships zero or more reusable artifacts in `outputs/`. These are surfaced to learners via `scripts/install_skills.py` and the site catalog. Two artifact types exist today:
+
+**Prompt artifact** (`outputs/prompt-<slug>.md`):
+
+```yaml
+---
+name: prompt-<slug>
+description: <One-line summary of what the prompt teaches or helps with>
+phase: <N>
+lesson: <M>
+---
+
+<System prompt body — instructions for an AI to adopt a specific teaching
+persona, workflow, or decision framework.>
+```
+
+Prompts are AI tutor/system prompts that encode a teaching methodology. They are persona-driven: the body is a "You are a..." directive followed by principles, response structures, and anti-patterns. See `phases/01-math-foundations/02-vectors-matrices-operations/outputs/prompt-matrix-operations.md` for the canonical example.
+
+**Skill artifact** (`outputs/skill-<slug>.md`):
+
+```yaml
+---
+name: skill-<slug>
+description: <One-line summary>
+version: 1.0.0
+phase: <N>
+lesson: <M>
+tags: [<comma-separated>]
+---
+
+# <Title>
+
+<Reference content — decision checklists, lookup tables, recipes, or
+step-by-step workflows the learner can consult during real work.>
+```
+
+Skills are reference material, not personas. They answer "how do I decide X?" or "what are the options for Y?" with structured, scannable content.
+
+**Prompt writing conventions** (distilled from the matrix-operations example):
+
+1. **Persona-first.** Start with "You are a..." — define the role, not the task.
+2. **Principles before procedures.** List 4-6 design principles the AI must follow, each with a concrete behavioral rule.
+3. **Structured response format.** Define exactly how the AI should organize its answers (e.g., geometry → formula → example → NN connection → pitfall).
+4. **Scope explicitly.** List the operations/concepts the prompt covers. List what to avoid.
+5. **Concrete over abstract.** Every principle needs a "show, don't tell" behavioral rule. "Start with geometry" is abstract; "Show what happens to a unit square before writing any equations" is concrete.
+6. **Ban weasel words.** Forbid "obviously", "trivially", "it can be shown that" — these undermine learner confidence.
+
+**Skill writing conventions:**
+
+1. **Decision-first.** Structure around choices the learner faces, not around concepts.
+2. **Tables over prose.** Decision matrices, comparison tables, and checklists scan faster than paragraphs.
+3. **Version explicitly.** Every skill has a `version` in its frontmatter. Bump it on content changes.
+4. **Tag for discovery.** Tags enable `install_skills.py --tag <tag>` filtering. Use lowercase, hyphenated tags.
+
+Artifacts are installed via `python3 scripts/install_skills.py` (see `--help` for options). The script discovers all `outputs/prompt-*.md` and `outputs/skill-*.md` files, parses frontmatter, and copies them to a target directory.
+
 ---
 
 ## Per-PR validation

@@ -1,0 +1,132 @@
+# 凸最优化
+
+> Convex 问题只有一个谷。神经网络有上百万个。知道区别很重要。
+
+**类型：** 动手实现
+**语言：** Python
+**前置要求：** Phase 1, Lesson 04, 08
+**时间：** ~90 分钟
+
+## 术语对照
+
+- convex set，凸集
+- convex function，凸函数
+- Hessian，海森矩阵
+- Newton's method，牛顿法
+- Lagrange multiplier，拉格朗日乘子
+- KKT conditions，KKT 条件
+- complementary slackness，互补松弛性
+- saddle point，鞍点
+- overparameterization，过参数化
+## 关键术语
+
+| 术语 | 含义 |
+|------|------|
+| Convex set | 任意两点连线在集合内 |
+| Convex function | f''≥0（1D）或 Hessian 正半定（多元） |
+| Hessian | 二阶偏导 matrix。编码曲率信息 |
+| Newton 法 | 用 H⁻¹ 代替 lr 的二阶 optimizer |
+| Lagrange multiplier | 将有约束问题转化无约束问题 |
+| KKT conditions | 不等式约束下最优性必要条件 |
+| 互补松弛 | 要么约束激活，要么 multiplier=0 |
+| Saddle point | Gradient=0，但某些方向最小编某些方向最大 |
+| Overparameterization | 多于训练样本的参数平滑了 loss landscape |
+
+## 学习目标
+
+- 用定义、二阶导数、Hessian 准则检验函数是否 convex
+- 实现 Newton 法并与 gradient descent 比较二次收敛速度
+- 用 Lagrange multipliers 解约束最优化问题，解读 KKT 条件
+- 解释为何神经网络 loss landscape 是 non-convex 但 SGD 仍能找到好解
+
+## 概念
+
+### Convex Set
+
+集合内任意两点连线完全在集合内。矩形、圆、半空间是 convex；甜甜圈、星星不是。
+
+### Convex Function
+
+```
+f(tx+(1-t)y) ≤ t·f(x) + (1-t)·f(y)
+
+几何：图上任意两点的连线在图形上方或之上。
+```
+
+凸函数：x², |x|, eˣ, -log(x), 任何线性函数。非凸：x³, sin(x)。
+
+### 检验方法
+
+**二阶导数检验（1D）：** f''(x) ≥ 0 对所有 x → convex。x² convex（f''=2），x³ 不 convex（f''=6x，负时）。
+**Hessian 检验（多元）：** Hessian matrix 处处正半定 → convex。
+
+### 为什么 Convexity 重要
+
+**对于 convex 函数，每个局部最小值就是全局最小值。** Gradient descent 不可能被卡住。任何下坡路径通向同一答案。不需随机重启、学习率调度。解唯一（除平坦区域）。
+
+ML 中 convex：线性回归（MSE），逻辑回归，SVM（hinge loss），LASSO，Ridge。Non-convex：任意带非线性 activation 的隐藏层的神经网络。
+
+### Newton 法
+
+```
+x_new = x - H⁻¹ · gradient     （二阶，用 Hessian）
+
+对比：x_new = x - lr · gradient   （一阶）
+```
+
+Hessian 逆替代标量学习率。自动根据局部曲率调整步长和方向。近最小值时二次收敛（误差每步平方）。优点：无需调 lr，尺度不变。缺点：Hessian 存储 O(n²)，求逆 O(n³)。100 万参数神经网络 = 10¹² 项，不可行。
+
+### Lagrange Multipliers
+
+约束问题 → 无约束问题。最小化 f(x) 受 g(x)=0。构造 L(x,λ) = f(x) + λ·g(x)。求 ∇L=0。
+
+几何直觉：约束最小值处，f 的 gradient 必须平行于约束 g 的 gradient。不平行则还能沿约束面移动进一步降低 f。
+
+### KKT 条件
+
+推广到不等式约束 g_i(x)≤0。四个条件：稳定性、原始可行性、对偶可行性、互补松弛性。互补松弛性关键：要么约束激活（g=0），要么 multiplier=0（约束无关）。
+
+SVMs 中，support vector 是约束激活的样本（λ>0）。其他样本 λ=0，不影响决策边界。
+
+### Regularization 即约束优化
+
+L2（Ridge）= 最小化 Loss 受 ||w||²≤t。约束区是圆→光滑边界→weight 缩小但非零。
+L1（LASSO）= 最小化 Loss 受 ||w||_1≤t。约束区是菱形→角在轴上→某些 weight 精确为零（稀疏性）。
+
+### 为何 Deep Learning 虽 Non-Convex 却有效
+
+1. **大多局部最小值足够好。** 高维中随机临界点压倒性为 saddle point。局部最小值极少，其 loss 接近全局。
+2. **Saddle point 才是真正障碍。** n 个参数的函数，随机临界点所有 n 个 eigenvalue 为正的概率≈2^(-n)。SGD 噪声帮助逃离。
+3. **Overparameterization 平滑 landscape。** 参数多于样本的网络有更平滑、更连通的 loss 面。
+4. **随机噪声充当隐式 regularization。** Mini-batch SGD 的噪声阻止在 sharp minima 定居。Sharp minima 过拟合，flat minima 泛化好。
+
+## 动手实现
+
+```python
+def newtons_method(f, grad_f, hessian_f, x0, steps=50):
+    x = list(x0)
+    for _ in range(steps):
+        g = grad_f(x)
+        H = hessian_f(x)
+        # 2D 解析求逆
+        det = H[0][0]*H[1][1] - H[0][1]*H[1][0]
+        H_inv = [[H[1][1]/det, -H[0][1]/det],
+                 [-H[1][0]/det, H[0][0]/det]]
+        dx = [H_inv[0][0]*g[0]+H_inv[0][1]*g[1],
+              H_inv[1][0]*g[0]+H_inv[1][1]*g[1]]
+        x = [x[0]-dx[0], x[1]-dx[1]]
+    return x
+
+# Lagrange 乘子求解
+def lagrange_solve(f_grad, g_val, g_grad, x0, lr=0.01, steps=5000):
+    x, lam = list(x0), 0.0
+    for _ in range(steps):
+        fg, gv, gg = f_grad(x), g_val(x), g_grad(x)
+        x = [xi - lr*(fgi + lam*ggi) for xi, fgi, ggi in zip(x, fg, gg)]
+        lam += 0.01 * gv
+    return x
+
+# 检验 convexity：采样点，检查定义
+def check_convexity(f, dim, bounds=(-5,5), samples=1000):
+    ...
+```
