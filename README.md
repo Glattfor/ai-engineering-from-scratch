@@ -2,6 +2,10 @@
   <img src="assets/banner.svg" alt="AI Engineering from Scratch — reference manual banner" width="100%">
 </p>
 
+> 🧠 **个人学习分支** — 基于 [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch)，
+> 包含全部阶段的中文学习笔记（`zh-xyp.md` / `zh-xyp.ipynb`）。
+> 上游更新通过 `main` 分支同步，个人笔记在 `my-notes` 分支。
+
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-1a1a1a?style=flat-square&labelColor=fafaf5" alt="MIT License"></a>
   <a href="ROADMAP.md"><img src="https://img.shields.io/badge/lessons-503-3553ff?style=flat-square&labelColor=fafaf5" alt="503 lessons"></a>
