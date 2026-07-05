@@ -1,0 +1,20 @@
+---
+description: Practice design rules for Chinese study notebooks
+globs: "**/zh-xyp.ipynb,**/docs/zh-xyp.md"
+alwaysApply: false
+---
+
+# Chinese Practice Design
+
+When editing `zh-xyp` Chinese study notes, design exercises for learning momentum first.
+
+- Use a layered structure: `基础必做` first, then `进阶选做`, then `挑战选做`.
+- Keep the first required exercise small enough to start immediately after reading the lesson.
+- Prefer concrete operations over abstract proofs: apply a matrix, compare coordinates, print observations, then interpret.
+- Give step-by-step guidance in plain Chinese, but do not put final code answers directly in comments.
+- Avoid heavy terms in the opening prompt. Introduce terms like `正交`, `谱半径`, `VDV^-1`, or `特征分解` only after a simpler action-based explanation.
+- Tests should be friendly checkpoints, not interview-style puzzles. Use `assert` cells as validation, but keep failure messages understandable.
+- Implementation cells may use `raise NotImplementedError`, but docstrings should explain the task in beginner-friendly language.
+- Let exercises reuse Build It helpers unless the lesson specifically aims to reimplement that helper.
+- Do not jump from a fill-in exercise directly to a full algorithm rewrite. If a concept is hard, split it into observation -> small function -> optional challenge.
+- Clear stale notebook outputs after redesigning exercises so old tracebacks do not confuse the learner.
